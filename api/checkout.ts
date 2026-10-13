@@ -47,9 +47,12 @@ export async function POST(request: Request) {
     })
   } catch (e) {
     // Le type d'erreur Stripe aide au diagnostic sans révéler de secret
-    const type = e instanceof Stripe.errors.StripeError ? e.type : 'inconnue'
+    const err = e instanceof Stripe.errors.StripeError ? e : null
     console.error('Erreur Stripe :', e)
-    return Response.json({ error: 'Erreur Stripe', type }, { status: 500 })
+    return Response.json(
+      { error: 'Erreur Stripe', type: err?.type, code: err?.code, champ: err?.param },
+      { status: 500 },
+    )
   }
 
   return Response.json({ url: session.url })
