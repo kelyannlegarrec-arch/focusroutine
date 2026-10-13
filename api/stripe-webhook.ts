@@ -57,7 +57,10 @@ async function traiter(request: Request) {
         .eq('id', session.client_reference_id)
       if (error) {
         console.error('Erreur Supabase :', error)
-        return Response.json({ error: 'Erreur base de données', code: error.code }, { status: 500 })
+        return Response.json(
+          { error: 'Erreur base de données', code: error.code, message: error.message, indice: error.hint },
+          { status: 500 },
+        )
       }
     }
   }
@@ -74,7 +77,10 @@ async function traiter(request: Request) {
       .eq('stripe_customer_id', subscription.customer as string)
     if (error) {
       console.error('Erreur Supabase :', error)
-      return Response.json({ error: 'Erreur base de données', code: error.code }, { status: 500 })
+      return Response.json(
+        { error: 'Erreur base de données', code: error.code, message: error.message, indice: error.hint },
+        { status: 500 },
+      )
     }
   }
 
