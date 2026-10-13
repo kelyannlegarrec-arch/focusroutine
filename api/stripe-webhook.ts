@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 // Lit un réglage Vercel en retirant les espaces et retours à la ligne invisibles
 const env = (nom: string) => (process.env[nom] ?? '').trim()
 
-export async function POST(request: Request) {
+async function traiter(request: Request) {
   // Vérifie que les réglages Vercel sont présents (on n'affiche que les noms, jamais les valeurs)
   const manquantes = [
     'STRIPE_SECRET_KEY',
@@ -79,4 +79,15 @@ export async function POST(request: Request) {
   }
 
   return new Response('ok')
+}
+
+// Toute erreur imprévue renvoie un message lisible (visible dans Stripe), jamais de clé
+export async function POST(request: Request) {
+  try {
+    return await traiter(request)
+  } catch (e) {
+    console.error('Erreur webhook :', e)
+    const message = e instanceof Error ? e.message.slice(0, 200) : 'inconnue'
+    return Response.json({ error: 'Erreur imprévue', message }, { status: 500 })
+  }
 }
