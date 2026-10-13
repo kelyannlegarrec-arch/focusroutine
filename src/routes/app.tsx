@@ -1,12 +1,14 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
+import { estAbonne } from '@/lib/abonnement'
 import { supabase } from '@/lib/supabase'
 
 export const Route = createFileRoute('/app')({
-  // Page réservée : sans session, on renvoie vers la connexion
+  // Page réservée aux abonnés actifs
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession()
     if (!data.session) throw redirect({ to: '/connexion' })
+    if (!(await estAbonne())) throw redirect({ to: '/abonnement' })
     return { user: data.session.user }
   },
   component: AppPage,
