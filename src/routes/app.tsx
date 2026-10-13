@@ -174,7 +174,12 @@ function AppPage() {
                     <p className="text-sm text-muted-foreground">{bloc.minutes} min</p>
                   </div>
                   {!bloc.fait && (
-                    <Button size="icon-lg" onClick={() => demarrer(bloc.id)} aria-label={`Démarrer ${bloc.titre}`}>
+                    <Button
+                      size="icon-lg"
+                      variant={bloc.pause ? 'outline' : 'default'}
+                      onClick={() => demarrer(bloc.id)}
+                      aria-label={`Démarrer ${bloc.titre}`}
+                    >
                       <Play />
                     </Button>
                   )}
