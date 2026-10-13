@@ -7,6 +7,18 @@ import { createClient } from '@supabase/supabase-js'
 const env = (nom: string) => (process.env[nom] ?? '').trim()
 
 export async function POST(request: Request) {
+  // Vérifie que les réglages Vercel sont présents (on n'affiche que les noms, jamais les valeurs)
+  const manquantes = [
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'VITE_SUPABASE_URL',
+    'SUPABASE_SECRET_KEY',
+  ].filter((nom) => !env(nom))
+  if (manquantes.length) {
+    console.error('Variables manquantes :', manquantes)
+    return Response.json({ error: 'Configuration manquante', manquantes }, { status: 500 })
+  }
+
   const stripe = new Stripe(env('STRIPE_SECRET_KEY'), {
     // Utilise fetch : marche sur Vercel et derrière un proxy en local
     httpClient: Stripe.createFetchHttpClient(),
@@ -43,7 +55,10 @@ export async function POST(request: Request) {
           subscription_status: subscription.status,
         })
         .eq('id', session.client_reference_id)
-      if (error) return new Response('Erreur base de données', { status: 500 })
+      if (error) {
+        console.error('Erreur Supabase :', error)
+        return Response.json({ error: 'Erreur base de données', code: error.code }, { status: 500 })
+      }
     }
   }
 
@@ -57,7 +72,10 @@ export async function POST(request: Request) {
       .from('profiles')
       .update({ subscription_status: subscription.status })
       .eq('stripe_customer_id', subscription.customer as string)
-    if (error) return new Response('Erreur base de données', { status: 500 })
+    if (error) {
+      console.error('Erreur Supabase :', error)
+      return Response.json({ error: 'Erreur base de données', code: error.code }, { status: 500 })
+    }
   }
 
   return new Response('ok')
