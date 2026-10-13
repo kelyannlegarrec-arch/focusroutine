@@ -75,9 +75,14 @@ function HomePage() {
           <a href="#" className="text-lg font-semibold">
             FocusRoutine
           </a>
-          <Button asChild>
-            <a href="#prix">Commencer</a>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost">
+              <Link to="/connexion">Connexion</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/inscription">Commencer</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -92,7 +97,7 @@ function HomePage() {
             tâche par tâche.
           </p>
           <Button asChild size="lg" className="mt-8 h-12 px-6 text-base">
-            <a href="#prix">Commencer</a>
+            <Link to="/inscription">Commencer</Link>
           </Button>
         </section>
 
@@ -159,8 +164,8 @@ function HomePage() {
               </CardContent>
               <CardFooter>
                 {/* Le paiement Stripe sera branché à l'étape 4 */}
-                <Button size="lg" className="h-12 w-full text-base">
-                  Commencer
+                <Button asChild size="lg" className="h-12 w-full text-base">
+                  <Link to="/inscription">Commencer</Link>
                 </Button>
               </CardFooter>
             </Card>
