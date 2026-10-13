@@ -49,8 +49,20 @@ export async function POST(request: Request) {
     // Le type d'erreur Stripe aide au diagnostic sans révéler de secret
     const err = e instanceof Stripe.errors.StripeError ? e : null
     console.error('Erreur Stripe :', e)
+    // DIAGNOSTIC TEMPORAIRE (valeurs non secrètes) : prix reçu et prix existant sur ce compte
+    const prixDuCompte = await stripe.prices
+      .list({ limit: 5 })
+      .then((l) => l.data.map((p) => p.id))
+      .catch(() => null)
     return Response.json(
-      { error: 'Erreur Stripe', type: err?.type, code: err?.code, champ: err?.param },
+      {
+        error: 'Erreur Stripe',
+        type: err?.type,
+        code: err?.code,
+        champ: err?.param,
+        prix: JSON.stringify(process.env.STRIPE_PRICE_ID),
+        prixDuCompte,
+      },
       { status: 500 },
     )
   }
