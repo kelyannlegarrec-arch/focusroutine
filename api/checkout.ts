@@ -3,6 +3,10 @@
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
+// Lit un réglage Vercel en retirant les espaces et retours à la ligne invisibles
+// (un copier-coller depuis un téléphone en ajoute parfois)
+const env = (nom: string) => (process.env[nom] ?? '').trim()
+
 export async function POST(request: Request) {
   // Vérifie que les réglages Vercel sont présents (on n'affiche que les noms, jamais les valeurs)
   const manquantes = [
@@ -10,19 +14,19 @@ export async function POST(request: Request) {
     'STRIPE_PRICE_ID',
     'VITE_SUPABASE_URL',
     'VITE_SUPABASE_PUBLISHABLE_KEY',
-  ].filter((nom) => !process.env[nom])
+  ].filter((nom) => !env(nom))
   if (manquantes.length) {
     console.error('Variables manquantes :', manquantes)
     return Response.json({ error: 'Configuration manquante', manquantes }, { status: 500 })
   }
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  const stripe = new Stripe(env('STRIPE_SECRET_KEY'), {
     // Utilise fetch : marche sur Vercel et derrière un proxy en local
     httpClient: Stripe.createFetchHttpClient(),
   })
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL as string,
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+    env('VITE_SUPABASE_URL'),
+    env('VITE_SUPABASE_PUBLISHABLE_KEY'),
   )
 
   // On vérifie qui est le client grâce à son jeton de connexion Supabase
@@ -36,7 +40,7 @@ export async function POST(request: Request) {
   try {
     session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: env('STRIPE_PRICE_ID'), quantity: 1 }],
       client_reference_id: data.user.id,
       customer_email: data.user.email,
       locale: 'fr',
@@ -49,20 +53,8 @@ export async function POST(request: Request) {
     // Le type d'erreur Stripe aide au diagnostic sans révéler de secret
     const err = e instanceof Stripe.errors.StripeError ? e : null
     console.error('Erreur Stripe :', e)
-    // DIAGNOSTIC TEMPORAIRE (valeurs non secrètes) : prix reçu et prix existant sur ce compte
-    const prixDuCompte = await stripe.prices
-      .list({ limit: 5 })
-      .then((l) => l.data.map((p) => p.id))
-      .catch(() => null)
     return Response.json(
-      {
-        error: 'Erreur Stripe',
-        type: err?.type,
-        code: err?.code,
-        champ: err?.param,
-        prix: JSON.stringify(process.env.STRIPE_PRICE_ID),
-        prixDuCompte,
-      },
+      { error: 'Erreur Stripe', type: err?.type, code: err?.code, champ: err?.param },
       { status: 500 },
     )
   }

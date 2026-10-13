@@ -3,15 +3,18 @@
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
+// Lit un réglage Vercel en retirant les espaces et retours à la ligne invisibles
+const env = (nom: string) => (process.env[nom] ?? '').trim()
+
 export async function POST(request: Request) {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  const stripe = new Stripe(env('STRIPE_SECRET_KEY'), {
     // Utilise fetch : marche sur Vercel et derrière un proxy en local
     httpClient: Stripe.createFetchHttpClient(),
   })
   // Clé secrète Supabase : elle seule peut modifier les fiches clients
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL as string,
-    process.env.SUPABASE_SECRET_KEY as string,
+    env('VITE_SUPABASE_URL'),
+    env('SUPABASE_SECRET_KEY'),
   )
 
   // On vérifie que le message vient vraiment de Stripe (signature)
@@ -22,7 +25,7 @@ export async function POST(request: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET as string,
+      env('STRIPE_WEBHOOK_SECRET'),
     )
   } catch {
     return new Response('Signature invalide', { status: 400 })
